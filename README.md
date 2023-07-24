@@ -29,3 +29,69 @@ We can handle our own threads by utilizing @Async annotation in accordance with 
 * Sync is blocking — it will only send the server one request at a time and will wait for that request to be answered by the server.
 * Async increases throughput because multiple operations can run at the same time.
 * Sync is slower and more methodical.
+
+Sometimes, depending on the complexity of your application or certain requirements, you might need to customize the behavior of the thread pool used by your CompletableFuture instances.
+
+By default, CompletableFuture uses a static ForkJoinPool.commonPool(). If no threads are available in the pool, tasks will wait until one becomes available. This default might not be ideal in all cases.
+
+can customize your executor configuration by creating a new class annotated with @Configuration and defining a TaskExecutor bean inside of it:
+
+```
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+@Configuration
+public class TaskConfig {
+
+    @Bean("taskExecutor")
+    public TaskExecutor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(50);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("Async-");
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
+ I have set some basic properties for the executor, such as the core and max pool size. You can adjust these values based on your needs. The thread name prefix is just a nice-to-have that can help you distinguish the threads if you need to debug.
+
+Now, you can inject this executor into your service and use it with the @Async annotation to specify that this executor should be used:
+
+```
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+@Service
+public class MyService {
+
+    private final Executor taskExecutor;
+
+    public MyService(@Qualifier("taskExecutor") Executor taskExecutor) {
+        this.taskExecutor = taskExecutor;
+    }
+
+    @Async("taskExecutor")
+    public CompletableFuture<String> executeLongTask() {
+        // Let's simulate a long-running task
+        //Thread.sleep(5000);
+        for (int i = 0; i < 10; i++) {
+            System.out.println("running loop " + i);
+
+        }
+        System.out.println("Long running task completed111111");
+        // Return a completed future with the result of the operation.
+        return CompletableFuture.completedFuture("Long running task completed");
+    }
+    
+    // Rest of the methods...
+}
+
+```
