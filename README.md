@@ -58,8 +58,26 @@ public class TaskConfig {
 }
 ```
 
- I have set some basic properties for the executor, such as the core and max pool size. You can adjust these values based on your needs. The thread name prefix is just a nice-to-have that can help you distinguish the threads if you need to debug.
+  I have set some basic properties for the executor, such as the core and max pool size. You can adjust these values based on your needs. The thread name prefix is just a nice-to-have that can help you distinguish the threads if you need to debug.
+ 
+The @Bean("taskExecutor") line indicates that this method is a Spring bean factory, and its return value (an instance of TaskExecutor) is to be managed by the Spring container. Spring will call this method and register its return value so that other beans can use it. The string "taskExecutor" is the bean name, and it is used when other beans want to reference this particular bean.
 
+> Here is the breakdown of the method:
+
+* ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor(); - creates a new ThreadPoolTaskExecutor, which is an implementation of TaskExecutor that is backed by a java.util.concurrent.ThreadPoolExecutor. This is a thread pool that can run tasks in parallel.
+
+* executor.setCorePoolSize(10); - this sets the core size of the thread pool. The pool will always maintain this many threads, even if they are idle.
+
+* executor.setMaxPoolSize(50); - this sets the maximum size of the thread pool. The pool can scale up to this many threads if necessary. If the number of running threads exceeds the core pool size, and the queue is full, then additional threads up to this number will be created.
+
+* executor.setQueueCapacity(500); - this sets the capacity of the queue that holds tasks waiting to be executed. If all threads are busy and the queue is full, additional threads will be created up to the maximum pool size. If the maximum pool size is reached and the queue is full, then new tasks will be rejected.
+
+* executor.setThreadNamePrefix("Async-"); - this sets a prefix for the names of threads created by this executor. This can be useful for debugging, as you can easily identify which threads are created by this executor.
+
+* executor.initialize(); - this initializes the executor. It's necessary to call this method after you have finished configuring the executor, before you return it from the bean factory method.
+
+* return executor; - this returns the configured executor so that Spring can register it as a bean.
+  
 Now, you can inject this executor into your service and use it with the @Async annotation to specify that this executor should be used:
 
 ```
