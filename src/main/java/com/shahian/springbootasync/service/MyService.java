@@ -1,14 +1,21 @@
 package com.shahian.springbootasync.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Service
 public class MyService {
+    private final Executor taskExecutor;
 
-    @Async
+    public MyService(@Qualifier("taskExecutor") Executor taskExecutor) {
+        this.taskExecutor = taskExecutor;
+    }
+    //@Async
+    @Async("taskExecutor")
     public CompletableFuture<String> executeLongTask() {
         // Let's simulate a long-running task
         //Thread.sleep(5000);
