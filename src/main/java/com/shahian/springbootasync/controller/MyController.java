@@ -26,4 +26,9 @@ public class MyController {
         myService.method5();
         return "Task started. Check the console for the result after a few seconds.";
     }
+    @GetMapping("/v1/start-task1")
+    public String startLongRunningTask1() throws ExecutionException, InterruptedException {
+        CompletableFuture<String> stringCompletableFuture = myService.executeLongTask1();
+        return "Task started. Check the console for the result after a few seconds.";
+    }
 }

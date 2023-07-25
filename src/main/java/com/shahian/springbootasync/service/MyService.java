@@ -14,6 +14,7 @@ public class MyService {
     public MyService(@Qualifier("taskExecutor") Executor taskExecutor) {
         this.taskExecutor = taskExecutor;
     }
+
     //@Async
     @Async("taskExecutor")
     public CompletableFuture<String> executeLongTask() {
@@ -27,6 +28,7 @@ public class MyService {
         // Return a completed future with the result of the operation.
         return CompletableFuture.completedFuture("Long running task completed");
     }
+
     public void method1() {
         System.out.println("result of method1");
     }
@@ -39,5 +41,26 @@ public class MyService {
     public void method5() {
         System.out.println("result of method5");
 
+    }
+
+    @Async
+    public CompletableFuture<String> executeLongTask1() {
+        method1();
+        method2();
+        CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
+            method3();
+            return "complete process";
+        });
+        return completableFuture;
+    }
+
+    private void method3() {
+        // Let's simulate a long-running task
+        //Thread.sleep(5000);
+        for (int i = 0; i < 10; i++) {
+            System.out.println("running loop " + i);
+
+        }
+        System.out.println("Long running task completed111111");
     }
 }
